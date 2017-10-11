@@ -1,0 +1,18 @@
+This is a simple-minded approach for the cartpole problem.
+The original idea is to apply Policy Iteration method from the textbook to this problem and experiment.
+Although it was noticed that the problem is a continuous-state problem, where simple Policy Iteration may not work,
+I converted to a simple-minded discrete-state problem by only considering the states: (pos>0?, vel>0?, theta>0?, omega>0?)
+The idea comes from the intuition that when velocity is to the right, while the pole is also going to fall conterclockwisely, it surely should be applied a force to the left.
+In this case, I thought that there might be a mapping from this simple discrete state to the action.
+Since one discrete approximation state corresponds to a lot of original states, and the same action may result in different next states, I modeled this as uncertainty, so that
+the evaluation value V_pi(s) should be the expectation learned from estimation. I used running average to calculate this as at the beginning the values are not for the whole trajectory.
+
+However a few things make this method incorrect:
+1. the evaluation value generally does not converge.
+    Let's just suppose all other values V_pi(s') have converged except V_pi(s). Then when updating V_pi(s), in the algorithm I use V_pi(s)<-V_pi(s)+alpha * TD. As the other values
+    are mostly possible to be diverse, we can view this as moving the point in between some other points. It surely will oscillate a lot. Also, the difference value used for stop
+    can also be quite large.
+    The experiment curve proves that this method does not work
+2. Another reason is that applying a force at a fixed discrete state may make it move a constant velocity to a certain direction. This is shown in the initial value of the policy.
+3. The essential inequalit  y for policy iteration does not hold in general
+4. all of the states can be alive states or dead states, which is bad
