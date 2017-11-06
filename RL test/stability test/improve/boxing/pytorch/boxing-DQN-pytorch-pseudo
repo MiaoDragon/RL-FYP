@@ -1,0 +1,42 @@
+"""
+pseudocode:
+## training
+for each episode:
+    obs = env.reset()
+    state = preprocess(obs)
+    for each frame:
+        action = behavior_policy(state)
+        prev_state = state
+        obs, r = env.step(action)
+        state = preprocess(obs)
+        memory.push(prev_state, r, state)
+        train qNet
+        if already passed C steps:
+            copy qNet to targetNet
+
+
+# network train:
+batch = minibatch(memory)
+targets = batch.r + gamma * V`(batch.next_state)  ??? explode?
+qNet.optimize(batch.state, batch.action, targets)
+
+# to get V value: given batch of state
+return targetNet.eval(batch.next_state).max(1)
+
+# behavior_policy(state):
+if rand(1.) < epislon:
+    random action
+else:
+    return policy(state)
+
+# policy(state):
+return qNet.eval([state]).argmax(1)
+
+# other stuff:
+epislon: epislon_end + (-epislon_end + epislon_begin) * e^(-epislon_decay *  STEP)
+error: l1-smooth
+gradient clipping
+initial: next_state_value: 0
+random start
+keep action fixed for a series of time (not used in this ver)
+"""

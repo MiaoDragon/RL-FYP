@@ -1,0 +1,2 @@
+model_checkpoint_path: "boxing-DQN_model.ckpt"
+all_model_checkpoint_paths: "boxing-DQN_model.ckpt"
