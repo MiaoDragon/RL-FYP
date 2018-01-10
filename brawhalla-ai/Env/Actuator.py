@@ -12,7 +12,7 @@ class ActionSpace:
         self.actions = [i for i in range(self.capacity)]
     def sample(self):
         # random sample
-        return random.sample(self.actions, 1)
+        return random.sample(self.actions, 1)[0]
     def __len__(self):
         return self.capacity
     def __str__(self):
@@ -53,7 +53,7 @@ class Actuator:
             else:
                 self.release_except(actions)
             for k in actions:
-                print(k)
+                #print(k)
                 keyboard.press(k)
         else:
             # release all other keys except the direction keys, and press

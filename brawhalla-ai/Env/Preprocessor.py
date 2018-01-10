@@ -20,6 +20,9 @@ class Preprocessor:
         processed_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         # edge detection
         processed_img = cv2.Canny(processed_img, threshold1=200, threshold2=300)
+        #processed_img = processed_img / 255.0
+        processed_img = cv2.resize(processed_img, (200,200), interpolation = cv2.INTER_CUBIC) / 255.0
+        #cv2.imshow('image', processed_img)
         return processed_img
 
 
@@ -27,7 +30,7 @@ class Preprocessor:
         # this is specific to this task
         DIE_RWD = 2.0
         HIT_RWD = 1.0
-        SWT_COUNT = 20 # skip # frames after switch
+        SWT_COUNT = 10 # skip # frames after switch
         #P1
         #cv2.imshow('window2',img[88:90,710:722])
         #P2
@@ -53,7 +56,7 @@ class Preprocessor:
         r2 = np.mean(y2)
         # skip # frames after switching
         if self.counter != 0:
-            print(self.counter)
+            #print(self.counter)
             self.counter = (self.counter + 1) % SWT_COUNT
             self.prev_value = [r1, r2]
             return 0.
@@ -67,21 +70,28 @@ class Preprocessor:
 
         if diff_flag and not self.prev_state['switch']:
             print('switching...')
+            # P1 dies
+            if self.me == 0:
+                rwd = -DIE_RWD
+            else:
+                rwd = DIE_RWD
             self.switch()
             self.prev_value = [r1, r2]
             self.prev_state['switch'] = True
             self.counter = 1
-            return 0.  # reward is 0
+            return rwd  # reward is 0
         if not diff_flag:
             self.prev_state['switch'] = False
             # 2. Die: one player change to larger value, and
             if r1 > self.prev_value[0] and r1 == 255.0:
                 # P1 die
                 self.prev_value = [r1, r2]
+                #self.counter = 1
                 return (2*self.me-1) * DIE_RWD
             if r2 > self.prev_value[1] and r2 == 255.0:
                 # P2 die
                 self.prev_value = [r1, r2]
+                #self.counter = 1
                 return (2*self.opponent-1) * DIE_RWD
 
             # 3. hit: one player change to smaller value

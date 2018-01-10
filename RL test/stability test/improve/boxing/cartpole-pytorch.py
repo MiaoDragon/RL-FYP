@@ -9,7 +9,7 @@ from collections import namedtuple
 from itertools import count
 from copy import deepcopy
 from PIL import Image
-
+import cv2
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -41,6 +41,7 @@ class ReplayMemory(object):
         self.memory = []
         self.position = 0
     def push(self, *args):
+        print(len(self.memory))
         if len(self.memory) < self.capacity:
             self.memory.append(Transition(*args))
             self.position = (self.position + 1) % self.capacity
@@ -96,7 +97,9 @@ def get_screen():
     screen = screen[:, :, slice_range]
     screen = np.ascontiguousarray(screen, dtype=np.float32) / 255
     screen = torch.from_numpy(screen)  # convert to torch tensor
-    return resize(screen).unsqueeze(0).type(Tensor)
+    screen = resize(screen)
+    #print(screen)
+    return screen.unsqueeze(0).type(Tensor)
 
 env.reset()
 plt.figure()
@@ -117,17 +120,26 @@ model = DQN()
 if use_cuda:
     model.cuda()
 
-optimizer = optim.RMSprop(model.parameters())
+LEARNING_RATE = 0.00025
+MOMENTUM = 0.95
+SQUARED_MOMENTUM = 0.95
+MIN_SQUARED_GRAD = 0.01
+optimizer = optim.RMSprop(model.parameters(), lr=LEARNING_RATE,
+                            momentum=MOMENTUM, alpha=SQUARED_MOMENTUM,
+                            eps=MIN_SQUARED_GRAD)
+
+#optimizer = optim.RMSprop(model.parameters())
 memory = ReplayMemory(10000)
 
 steps_done = 0
 
 def select_action(state):
     global steps_done
-    print(state)
+    #print(state)
     sample = random.random()
     eps_threshold = EPS_END + (EPS_START - EPS_END) * \
                     math.exp(-1. * steps_done / EPS_DECAY)
+    print('threshold: {}' . format(eps_threshold))
     steps_done += 1
     if sample > eps_threshold:
         return model(
@@ -184,6 +196,7 @@ def optimize_model():
     for param in model.parameters():
         param.grad.data.clamp_(-1,1) #gradient clipping
     optimizer.step()
+    print('loss: {}' . format(loss.data[0]))
 
 num_episodes = 1000
 for i_episode in range(num_episodes):
@@ -201,6 +214,11 @@ for i_episode in range(num_episodes):
         current_screen = get_screen()
         if not done:
             next_state = current_screen - last_screen
+            #if t == 10:
+                #plt.figure(1)
+            #   cv2.imshow('window', next_state.cpu().squeeze(0).permute(1,2,0).numpy())
+                #plt.title('Example extracted screen')
+                #plt.show()
         else:
             next_state = None
         # store the transition in memory

@@ -7,11 +7,21 @@ import os
 class DQN(nn.Module):
     def __init__(self):
         super(DQN, self).__init__()
-        self.conv1 = nn.Conv2d(4, 32, kernel_size=8, stride=4)
+        """
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
         self.hidden = nn.Linear(7*7*64, 512)
-        self.head = nn.Linear(512, 18)
+        #self.head = nn.Linear(512, 18)
+        self.head = nn.Linear(512, 35)
+        self.optimizer = None
+        """
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=10, stride=5)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=5)
+        self.conv3 = nn.Conv2d(64, 64, kernel_size=2, stride=1)
+        self.hidden = nn.Linear(7*7*64, 512)
+        #self.head = nn.Linear(512, 18)
+        self.head = nn.Linear(512, 35)
         self.optimizer = None
 
     def setOptimizer(self, opt):
@@ -22,7 +32,7 @@ class DQN(nn.Module):
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
         x = F.relu(self.hidden(x.view(x.size(0),-1)))
-        return self.head(x)
+        return self.head(x.view(x.size(0), -1))
 
     def optimize(self, batch):
         # batch[0]: state variable tensor of size _x4x84x84
@@ -34,7 +44,9 @@ class DQN(nn.Module):
         target_batch = batch[2]
         predictions = self(state_batch).gather(1, action_batch)
         # huber loss
-        loss = F.smooth_l1_loss(predictions, target_batch)
+        #loss = F.smooth_l1_loss(predictions, target_batch)
+        loss_ = torch.nn.MSELoss()
+        loss = loss_(predictions, target_batch)
         # optimize the model
         self.optimizer.zero_grad()
         loss.backward()

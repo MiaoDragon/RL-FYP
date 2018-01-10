@@ -9,7 +9,7 @@ class Plotter:
         self.errors = []
         self.eval_rewards = []
         self.folder = folder
-        self.SAVE_FREQ = 100
+        self.SAVE_FREQ = 10
         plt.ion()
         #plt.ioff()
         plt.figure()
@@ -47,7 +47,7 @@ class Plotter:
         plt.pause(0.001)
         if len(train_reward_t) % self.SAVE_FREQ == 0:
             # save every 100 iterations
-            plt.savefig(self.folder+'/DQN-cartpole-train_reward-100f', dpi=300)
+            plt.savefig(self.folder+'/DQN-cartpole-train_reward-1f', dpi=300)
 
     def plot_eval_rewards(self, R):
         self.eval_rewards.append(R)
